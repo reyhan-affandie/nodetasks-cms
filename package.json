@@ -6,8 +6,8 @@
   "scripts": {
     "build": "tsc && next build",
     "dev": "tsx src/server.ts -p 4000",
-    "startdev": "next start -p 4002",
-    "start": "next start -p 4003",
+    "startdev": "next start -p 4006",
+    "start": "next start -p 4007",
     "lint": "next lint"
   },
   "dependencies": {
