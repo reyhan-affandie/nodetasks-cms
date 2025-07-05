@@ -403,7 +403,11 @@ export function DataTableUI({
                               )
                             ) : column.isFile ? (
                               <div className="w-[32px] h-[32px] flex items-center justify-center">
-                                <FileDown className="w-6 h-6 stroke-blue-500" />
+                                {typeof value === "string" && value ? (
+                                  <FileDown className="w-6 h-6 stroke-blue-500" />
+                                ) : (
+                                  <FileDown className="w-6 h-6 stroke-gray-400" />
+                                )}
                               </div>
                             ) : typeof value === "string" ? (
                               value.length > 30 ? (
