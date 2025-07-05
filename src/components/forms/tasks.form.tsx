@@ -52,7 +52,7 @@ export function ModuleForm({
 }) {
   const t = useTranslations();
   const locale = useLocale();
-  const formActionWithLocale = async (prevState: any, formData: FormData) => {
+  const formActionWithLocale:any = async (prevState: any, formData: FormData) => {
     return tasksAction(prevState, formData, locale);
   };
 

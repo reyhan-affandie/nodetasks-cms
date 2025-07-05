@@ -6,9 +6,11 @@ export const LANGUAGES = ["en", "id", "ph"];
 export interface DefaultStateType {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
-  zodErrors: string | null;
+  zodErrors: Record<string, string[]> | null;
   error: boolean | null;
   message: string | null;
+  status?: number | undefined;
+  statusText?: string | undefined;
 }
 
 export const FORM_INITIAL_STATE: DefaultStateType = {
