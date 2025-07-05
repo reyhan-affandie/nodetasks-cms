@@ -9,6 +9,7 @@ import Image from "next/image";
 import { API_URL } from "@/constants/env";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { FileDown } from "lucide-react";
 
 export function ModuleView({
   alertViewOpen,
@@ -97,12 +98,25 @@ export function ModuleView({
           {/* File field */}
           <div>
             <Label>{t("file")}</Label>
+            <br />
             {data?.file ? (
-              <a href={`${API_URL}/${data.file}`} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline break-all">
-                {data.file.split("/").pop()}
-              </a>
+              <div className="flex flex-col">
+                <a
+                  href={`${API_URL}/${data.file}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex rounded hover:bg-blue-100 transition"
+                  title={t("download_file")}
+                  style={{ width: 64, height: 64, display: "inline-flex" }}
+                >
+                  <FileDown className="w-12 h-12 stroke-blue-500" />
+                </a>
+                <span className="mt-2 text-xs text-gray-600 ">{data.file}</span>
+              </div>
             ) : (
-              <p className="text-gray-500">-</p>
+              <div className="w-12 h-12 flex">
+                <FileDown className="w-12 h-12 stroke-gray-400" />
+              </div>
             )}
           </div>
 
