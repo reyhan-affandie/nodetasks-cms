@@ -46,7 +46,6 @@
     "countries-list": "^3.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.5.2",
-    "hls.js": "^1.6.2",
     "http-errors": "^2.0.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.475.0",
