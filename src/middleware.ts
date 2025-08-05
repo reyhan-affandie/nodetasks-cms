@@ -58,7 +58,7 @@ export async function middleware(request: NextRequest) {
 
     // ✅ Step 2: If user is logged in and visits `/en` or `/id`, redirect to dashboard
     if (token && pathname.match(/^\/(en|id)\/?$/)) {
-      return NextResponse.redirect(new URL(`/${pathLocale}/dashboard`, request.url));
+      return NextResponse.redirect(new URL(`/${pathLocale}/dashboard/events`, request.url));
     }
 
     // ✅ Step 3: If user is NOT logged in and tries to access protected routes, redirect to home

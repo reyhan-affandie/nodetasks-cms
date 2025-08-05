@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import * as React from "react";
@@ -6,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
 import { APP_NAME } from "@/constants/env";
 import { useLocale, useTranslations } from "next-intl";
-import { Gauge, LayoutGrid, ShieldCheck, Users, Layers, ListTodo, Star, ChevronDown, ChevronRight } from "lucide-react";
+import { Gauge, LayoutGrid, ShieldCheck, Users, Layers, ListTodo, Star, ChevronDown, ChevronRight, Calendar } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { ApiPayload } from "@/types/apiResult.type";
 import { getAuthUser } from "@/actions/auth.actions";
@@ -43,11 +42,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const [isLoading, setIsLoading] = useState(true);
   const hasFetched = useRef(false);
 
-  // PHASES STATE
-  const [phases, setPhases] = useState<{ id: number; name: string; name_en?: string; name_id?: string; name_ph?: string }[]>([]);
-  const [tasksOpen, setTasksOpen] = useState(true); // Expanded by default
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [phases, setPhases] = useState<any[]>([]);
+  const [tasksOpen, setTasksOpen] = useState(true);
+  const [dashboardOpen, setDashboardOpen] = useState(true);
 
-  // Get currentPhaseId from URL, e.g. "/en/tasks/3" => 3
   const currentPhaseId = React.useMemo(() => {
     const match = pathname.match(/\/tasks\/(\d+)/);
     return match ? Number(match[1]) : null;
@@ -61,7 +60,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         setIsLoading(true);
         const res = await getAuthUser();
         setData(res?.data);
-      } catch (error) {
+      } catch {
         setData(null);
       } finally {
         setIsLoading(false);
@@ -75,7 +74,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       try {
         const res = await getList("phases", 1, 100, "", "id", "asc");
         if (res?.data?.data) setPhases(res.data.data);
-      } catch (error) {
+      } catch {
         setPhases([]);
       }
     };
@@ -85,7 +84,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const featureMap = buildFeatureAccessMap(data);
 
   const handleNavigate = (path: string) => router.push(`/${locale}/${path}`);
-  const handlePhaseNavigate = (phaseId: number) => router.push(`/${locale}/tasks/${phaseId}`);
+  const handlePhaseNavigate = (id: number) => router.push(`/${locale}/tasks/${id}`);
 
   const hasPermission = (key: string, strict = false) => {
     const perms = featureMap[key];
@@ -115,14 +114,73 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     return rendered.length ? <SidebarMenu>{rendered}</SidebarMenu> : null;
   };
 
-  // Render Tasks with expandable phases (MULTILINGUAL LABELS)
-  const renderTasksMenu = () => {
-    if (!hasPermission("tasks")) return null;
-    if (!phases.length) return null;
+  const renderDashboardMenu = () => (
+    <SidebarMenu>
+      <SidebarMenuItem
+        className={`flex items-center px-3 py-2 rounded-md cursor-pointer select-none ${
+          pathname.includes("/dashboard") ? "bg-blue-100 text-blue-800 font-semibold" : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
+        }`}
+        onClick={() => setDashboardOpen((prev) => !prev)}
+      >
+        <Gauge className="mr-2 h-4 w-4" />
+        {t("dashboard")}
+        {dashboardOpen ? <ChevronDown className="ml-auto h-4 w-4" /> : <ChevronRight className="ml-auto h-4 w-4" />}
+      </SidebarMenuItem>
+      {dashboardOpen && (
+        <>
+          <SidebarMenuItem
+            className={`ml-8 flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer ${
+              pathname === `/${locale}/dashboard/events`
+                ? "bg-blue-100 text-blue-800 font-semibold"
+                : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
+            }`}
+            onClick={() => handleNavigate("dashboard/events")}
+          >
+            {t("dashboard_events")}
+          </SidebarMenuItem>
+          <SidebarMenuItem
+            className={`ml-8 flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer ${
+              pathname === `/${locale}/dashboard/tasks`
+                ? "bg-blue-100 text-blue-800 font-semibold"
+                : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
+            }`}
+            onClick={() => handleNavigate("dashboard/tasks")}
+          >
+            {t("dashboard_tasks")}
+          </SidebarMenuItem>
+        </>
+      )}
+    </SidebarMenu>
+  );
 
+  const renderEventsMenu = () =>
+    hasPermission("events") ? (
+      <SidebarMenu>
+        <SidebarMenuItem
+          className={`flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer ${
+            pathname === `/${locale}/events` ? "bg-blue-100 text-blue-800 font-semibold" : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
+          }`}
+          onClick={() => handleNavigate("events")}
+        >
+          <Calendar className="mr-2 h-4 w-4" />
+          {t("events")}
+        </SidebarMenuItem>
+        <SidebarMenuItem
+          className={`flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer ${
+            pathname === `/${locale}/schedules` ? "bg-blue-100 text-blue-800 font-semibold" : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
+          }`}
+          onClick={() => handleNavigate("schedules")}
+        >
+          <Calendar className="mr-2 h-4 w-4" />
+          {t("schedules")}
+        </SidebarMenuItem>
+      </SidebarMenu>
+    ) : null;
+
+  const renderTasksMenu = () => {
+    if (!hasPermission("tasks") || !phases.length) return null;
     return (
       <SidebarMenu>
-        {/* Parent: Tasks */}
         <SidebarMenuItem
           className={`flex items-center px-3 py-2 rounded-md cursor-pointer select-none ${
             pathname.includes("/tasks") && !pathname.includes("phases")
@@ -135,24 +193,22 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           {t("tasks")}
           {tasksOpen ? <ChevronDown className="ml-auto h-4 w-4" /> : <ChevronRight className="ml-auto h-4 w-4" />}
         </SidebarMenuItem>
-        {/* Sub-menu for each phase */}
         {tasksOpen &&
-          phases.map((phase) => {
-            // Choose multilingual label
-            let phaseLabel = phase.name;
-            if (locale === "id" && phase.name_id) phaseLabel = phase.name_id;
-            else if (locale === "ph" && phase.name_ph) phaseLabel = phase.name_ph;
-            else if (locale === "en" && phase.name_en) phaseLabel = phase.name_en;
+          phases.map((p) => {
+            let label = p.name;
+            if (locale === "id" && p.name_id) label = p.name_id;
+            else if (locale === "ph" && p.name_ph) label = p.name_ph;
+            else if (locale === "en" && p.name_en) label = p.name_en;
 
             return (
               <SidebarMenuItem
-                key={phase.id}
+                key={p.id}
                 className={`ml-8 flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer ${
-                  currentPhaseId === phase.id ? "bg-blue-100 text-blue-800 font-semibold" : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
+                  currentPhaseId === p.id ? "bg-blue-100 text-blue-800 font-semibold" : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
                 }`}
-                onClick={() => handlePhaseNavigate(phase.id)}
+                onClick={() => handlePhaseNavigate(p.id)}
               >
-                {t("tasks")} | {phaseLabel}
+                {t("tasks")} | {label}
               </SidebarMenuItem>
             );
           })}
@@ -160,7 +216,6 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     );
   };
 
-  // Section rendering helper
   const renderSection = (title: string, items: MenuItem[], extra?: React.ReactNode) => {
     const menu = renderMenu(items);
     if (!menu && !extra) return null;
@@ -188,27 +243,13 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           </div>
         ) : (
           <>
-            {/* Menu group: Dashboard + Tasks */}
             <div className="text-xs font-semibold text-muted-foreground uppercase px-3 pt-4 pb-2">Menu</div>
             <SidebarMenu>
-              {/* Dashboard */}
-              <SidebarMenuItem
-                className={`flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer ${
-                  pathname.includes("/dashboard") ? "bg-blue-100 text-blue-800 font-semibold" : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
-                }`}
-                onClick={() => handleNavigate("dashboard")}
-              >
-                <Gauge className="mr-2 h-4 w-4" />
-                {t("dashboard")}
-              </SidebarMenuItem>
-              {/* Tasks (Expandable) */}
+              {renderDashboardMenu()}
+              {renderEventsMenu()}
               {renderTasksMenu()}
             </SidebarMenu>
-
-            {/* Master Data */}
             {renderSection("Master Data", masterDataItems)}
-
-            {/* Admin */}
             {renderSection("Admin", adminItems)}
           </>
         )}
