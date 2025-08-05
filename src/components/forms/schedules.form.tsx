@@ -1,0 +1,239 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
+import { schedulesValidation, schedulesAction } from "@/actions/schedules.actions";
+import { DefaultStateType, FORM_INITIAL_STATE } from "@/constants/global";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { ErrorsHandling, ErrorsZod } from "@/components/customs/errors";
+import { SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose } from "@/components/ui/sheet";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { JustLogo } from "@/components/customs/logo";
+import { ApiPayload, Dispatcher } from "@/types/apiResult.type";
+import { Button } from "@/components/ui/button";
+import { toastMessage } from "@/components/customs/toast.message";
+import { useLocale, useTranslations } from "next-intl";
+import { SpecialSubmitButton } from "@/components/customs/button.submit";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+
+export function ModuleForm({
+  api,
+  formTitle,
+  setFormTitle,
+  setSheetOpen,
+  setData,
+  selectedData,
+  setSelectedDataId,
+  setSelectedDataIds,
+  setSelectCount,
+  setSelectedData,
+  reload,
+}: {
+  api: string;
+  formTitle: string;
+  setFormTitle: Dispatcher<string>;
+  setSheetOpen: Dispatcher<boolean>;
+  setData: Dispatcher<Array<ApiPayload>>;
+  selectedData: DefaultStateType;
+  setSelectedDataId: Dispatcher<number>;
+  setSelectedDataIds: Dispatcher<Array<number>>;
+  setSelectCount: Dispatcher<number>;
+  setSelectedData: Dispatcher<DefaultStateType>;
+  reload: () => void;
+}) {
+  const t = useTranslations();
+  const locale = useLocale();
+  const formActionWithLocale: any = async (prevState: any, formData: FormData) => {
+    return schedulesAction(prevState, formData, locale);
+  };
+
+  const [formState, formAction] = useActionState(formActionWithLocale, selectedData);
+  const [errors, setErrors] = useState<typeof formState | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [dataDate, setDataDate] = useState<Date | undefined>(selectedData?.data?.dataDate ? new Date(selectedData.data.dataDate) : undefined);
+  const [startTime, setStartTime] = useState(selectedData?.data?.startTime || "");
+  const [endTime, setEndTime] = useState(selectedData?.data?.endTime || "");
+  const [title, setTitle] = useState(selectedData?.data?.title || "");
+
+  const [openDate, setOpenDate] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (selectedData?.data !== null && formTitle === "update") {
+      setTitle(selectedData.data.title || "");
+      setDataDate(selectedData.data.dataDate ? new Date(selectedData.data.dataDate) : undefined);
+      setStartTime(selectedData.data.startTime || "");
+      setEndTime(selectedData.data.endTime || "");
+    } else if (formTitle === "create") {
+      setTitle("");
+      setDataDate(undefined);
+      setStartTime("");
+      setEndTime("");
+    }
+  }, [selectedData, formTitle]);
+
+  const resetState = () => {
+    setErrors(null);
+    setSelectedDataId(0);
+    setSelectedDataIds([]);
+    setSelectedData({ ...FORM_INITIAL_STATE });
+    setSelectCount(0);
+    setFormTitle("");
+    setSheetOpen(false);
+    formState.data = null;
+    formState.zodErrors = null;
+    formState.error = null;
+    formState.message = null;
+    setData((prevData) => prevData.map((item) => ({ ...item, x: false })));
+  };
+
+  useEffect(() => {
+    if (formState?.error === true) {
+      toastMessage({ api, variant: "destructive", status: formState?.status, statusText: formState?.statusText });
+    }
+    if (formState?.error === false) {
+      resetState();
+      toastMessage({
+        api,
+        variant: "default",
+        description: formTitle === "create" ? "Data successfully created" : "Data successfully updated",
+      });
+      reload();
+    }
+    setIsLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formState]);
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    if (!formRef.current) return;
+
+    const formData = new FormData(formRef.current);
+    if (dataDate) formData.set("dataDate", format(dataDate, "yyyy-MM-dd"));
+    formData.set("startTime", startTime);
+    formData.set("endTime", endTime);
+
+    const result = await schedulesValidation(formData, locale);
+    if (result) {
+      setErrors(result);
+      toastMessage({ api, variant: "destructive", status: formState?.status, statusText: formState?.statusText });
+      setIsLoading(false);
+      return;
+    }
+    setErrors(null);
+    formRef.current.requestSubmit();
+  };
+
+  return (
+    <SheetContent side="left" className="bg-blue-50 pt-12 max-h-screen overflow-auto">
+      <form ref={formRef} action={formAction} className="p-4 border border-gray-300 rounded-md space-y-4">
+        <SheetHeader>
+          <SheetTitle className="bg-blue-950 text-white p-2 font-normal rounded-md">
+            <div className="flex flex-row">
+              <JustLogo />
+              <div className="flex flex-1 px-2 items-center">
+                {formTitle} {api}
+              </div>
+            </div>
+          </SheetTitle>
+          <SheetDescription>&nbsp;</SheetDescription>
+        </SheetHeader>
+        <input id="formMethod" name="formMethod" type="hidden" defaultValue={formTitle} />
+        <input id="api" name="api" type="hidden" defaultValue={api} />
+        <input id="id" name="id" type="hidden" defaultValue={selectedData?.data?.id} />
+
+        <div>
+          <Label htmlFor="title" className="flex items-center gap-1 mb-1" required>
+            {t("title")}
+          </Label>
+          <Input id="title" name="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={191} className="border-blue-400" />
+          <ErrorsZod error={errors?.zodErrors?.title} />
+        </div>
+
+        <div>
+          <Label htmlFor="dataDate" className="flex items-center gap-1 mb-1" required>
+            {t("data_date")}
+          </Label>
+          <Popover open={openDate} onOpenChange={setOpenDate}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={`w-full justify-start text-left font-normal border-blue-400 bg-blue-50 ${!dataDate ? "text-muted-foreground" : ""}`}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dataDate ? format(dataDate, "yyyy-MM-dd") : t("choose_date")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 border border-blue-400 bg-white shadow-md rounded-md" align="start">
+              <Calendar
+                mode="single"
+                selected={dataDate}
+                onSelect={(date) => {
+                  setDataDate(date);
+                  setOpenDate(false);
+                }}
+                initialFocus
+                captionLayout="dropdown-buttons"
+                fromYear={2000}
+                toYear={new Date().getFullYear() + 10}
+              />
+            </PopoverContent>
+          </Popover>
+          <input type="hidden" name="dataDate" value={dataDate ? format(dataDate, "yyyy-MM-dd") : ""} />
+          <ErrorsZod error={errors?.zodErrors?.dataDate} />
+        </div>
+
+        <div>
+          <Label htmlFor="startTime" className="flex items-center gap-1 mb-1" required>
+            {t("start_time")}
+          </Label>
+          <Input
+            id="startTime"
+            name="startTime"
+            type="text"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            maxLength={5}
+            className="border-blue-400"
+            placeholder="HH:mm"
+          />
+          <ErrorsZod error={errors?.zodErrors?.startTime} />
+        </div>
+
+        <div>
+          <Label htmlFor="endTime" className="flex items-center gap-1 mb-1" required>
+            {t("end_time")}
+          </Label>
+          <Input
+            id="endTime"
+            name="endTime"
+            type="text"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+            maxLength={5}
+            className="border-blue-400"
+            placeholder="HH:mm"
+          />
+          <ErrorsZod error={errors?.zodErrors?.endTime} />
+        </div>
+
+        <SheetFooter className="flex flex-row space-x-1">
+          <SheetClose asChild className="flex flex-1">
+            <SpecialSubmitButton text={t("save")} {...{ onClick: () => handleSubmit(), loading: isLoading, loadingText: "Loading" }} />
+          </SheetClose>
+          <SheetClose asChild className="flex flex-1">
+            <Button variant="destructive" onClick={resetState}>
+              {t("close")}
+            </Button>
+          </SheetClose>
+        </SheetFooter>
+        <ErrorsHandling error={errors?.message} />
+        <ErrorsHandling error={formState?.message} />
+      </form>
+    </SheetContent>
+  );
+}
