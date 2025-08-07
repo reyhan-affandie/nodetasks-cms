@@ -18,7 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { updateField } from "@/actions/actions";
 import { toastMessage } from "@/components/customs/toast.message";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getAuthUser } from "@/actions/auth.actions";
 import { buildFeatureAccessMap } from "@/lib/utils";
@@ -269,6 +269,20 @@ export function DataTableUI({
     return <Badge variant={variant}>{value}</Badge>;
   }
 
+  const pathname = usePathname();
+
+  const handlePreviewEvent = (item: ApiPayload) => {
+    const userId = item.userId as number;
+    const dataDate = item.dataDate as string;
+    if (!userId || !dataDate) return;
+
+    const formattedDate = new Date(dataDate).toISOString().split("T")[0];
+    const localePrefix = pathname.split("/")[1]; // e.g., "en"
+    const basePath = `/${localePrefix}/dashboard/events`;
+
+    router.push(`${basePath}/${formattedDate}/${userId}`);
+  };
+
   return (
     <>
       {previewImage && (
@@ -296,7 +310,6 @@ export function DataTableUI({
         parents={parents}
         parentData={parentData}
         parentField={parentField}
-        totalData={totalData}
         t={t}
       />
       <div className="overflow-x-auto overflow-y-auto relative">
@@ -430,6 +443,13 @@ export function DataTableUI({
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              {(api === "events" || api === "schedules") && (
+                                <DropdownMenuItem asChild>
+                                  <Button variant="secondary" className="border-b w-full cursor-pointer" onClick={() => handlePreviewEvent(item)}>
+                                    {t("view")} {t("dashboard")}
+                                  </Button>
+                                </DropdownMenuItem>
+                              )}
                               {canRead && (
                                 <DropdownMenuItem asChild>
                                   <Button
@@ -514,21 +534,23 @@ export function DataTableUI({
             </Table>
           </ContextMenuTrigger>
           <ContextMenuContent className="space-y-1">
-            <ContextMenuItem asChild>
-              <Button
-                variant={"gray"}
-                className={`border-b w-full ${selectCount !== 1 ? "cursor-not-allowed" : "cursor-pointer"}`}
-                disabled={selectCount !== 1}
-                onClick={() => {
-                  setOpen(false);
-                  setTimeout(() => {
-                    setFormTitle("view");
-                  }, 300);
-                }}
-              >
-                {t("view")}
-              </Button>
-            </ContextMenuItem>
+            {canRead && (
+              <ContextMenuItem asChild>
+                <Button
+                  variant={"gray"}
+                  className={`border-b w-full ${selectCount !== 1 ? "cursor-not-allowed" : "cursor-pointer"}`}
+                  disabled={selectCount !== 1}
+                  onClick={() => {
+                    setOpen(false);
+                    setTimeout(() => {
+                      setFormTitle("view");
+                    }, 300);
+                  }}
+                >
+                  {t("view")}
+                </Button>
+              </ContextMenuItem>
+            )}
             {canUpdate && (
               <ContextMenuItem asChild>
                 <Button

@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import UserPicker from "@/components/pickers/users.picker";
+import { Switch } from "@/components/ui/switch";
 
 export function ModuleForm({
   api,
@@ -55,7 +56,7 @@ export function ModuleForm({
   const [errors, setErrors] = useState<typeof formState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [userId, setUserId] = useState(selectedData?.data?.userId ?? "");
+  const [user, setUser] = useState(selectedData?.data?.userId ?? "");
   const [userName, setUserName] = useState(selectedData?.data?.user?.name ?? "");
   const [userPickerOpen, setUserPickerOpen] = useState(false);
 
@@ -63,6 +64,7 @@ export function ModuleForm({
   const [startTime, setStartTime] = useState(selectedData?.data?.startTime || "");
   const [endTime, setEndTime] = useState(selectedData?.data?.endTime || "");
   const [title, setTitle] = useState(selectedData?.data?.title || "");
+  const [status, setStatus] = useState<boolean>(selectedData?.data?.status ?? false);
 
   const [openDate, setOpenDate] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -70,18 +72,20 @@ export function ModuleForm({
   useEffect(() => {
     if (selectedData?.data !== null && formTitle === "update") {
       setTitle(selectedData.data.title || "");
-      setUserId(selectedData.data.userId ?? "");
+      setUser(selectedData.data.userId ?? "");
       setUserName(selectedData.data.user?.name ?? "");
       setDataDate(selectedData.data.dataDate ? new Date(selectedData.data.dataDate) : undefined);
       setStartTime(selectedData.data.startTime || "");
       setEndTime(selectedData.data.endTime || "");
+      setStatus(selectedData.data.status || false);
     } else if (formTitle === "create") {
       setTitle("");
-      setUserId("");
+      setUser("");
       setUserName("");
       setDataDate(undefined);
       setStartTime("");
       setEndTime("");
+      setStatus(false);
     }
   }, [selectedData, formTitle]);
 
@@ -110,7 +114,7 @@ export function ModuleForm({
       reload();
     }
     setIsLoading(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formState]);
 
   const handleSubmit = async () => {
@@ -118,7 +122,7 @@ export function ModuleForm({
     if (!formRef.current) return;
 
     const formData = new FormData(formRef.current);
-    formData.set("userId", userId ?? "");
+    formData.set("userId", user ?? "");
     if (dataDate) formData.set("dataDate", format(dataDate, "yyyy-MM-dd"));
     formData.set("startTime", startTime);
     formData.set("endTime", endTime);
@@ -126,12 +130,47 @@ export function ModuleForm({
     const result = await eventsValidation(formData, locale);
     if (result) {
       setErrors(result);
-      toastMessage({ api, variant: "destructive", status: formState?.status, statusText: formState?.statusText });
+      toastMessage({
+        api,
+        variant: "destructive",
+        status: formState?.status,
+        statusText: formState?.statusText,
+      });
       setIsLoading(false);
       return;
     }
+
     setErrors(null);
-    formRef.current.requestSubmit();
+
+    try {
+      if (formRef.current?.requestSubmit) {
+        formRef.current.requestSubmit(); // will trigger formAction
+      } else {
+        // fallback if requestSubmit or server action fails
+        const result = await eventsAction(null, formData, locale);
+        if (result?.error) {
+          toastMessage({
+            api,
+            variant: "destructive",
+            status: result.error,
+            statusText: result.message,
+          });
+          setErrors(result);
+        } else {
+          toastMessage({
+            api,
+            variant: "default",
+            status: 200,
+            statusText: "success",
+          });
+          reload();
+          setErrors(null);
+          // Optionally close modal here
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -228,7 +267,7 @@ export function ModuleForm({
         </div>
 
         <div>
-          <Label htmlFor="userId" className="flex items-center gap-1 mb-1">
+          <Label htmlFor="user" className="flex items-center gap-1 mb-1">
             {t("name")}
           </Label>
           <div className="flex gap-2 items-center">
@@ -241,15 +280,26 @@ export function ModuleForm({
               {userName ? userName : t("choose_user")}
             </Button>
           </div>
-          <input type="hidden" name="userId" value={userId ?? ""} />
-          <ErrorsZod error={errors?.zodErrors?.userId} />
+          <input type="hidden" name="user" value={user ?? ""} />
+          <ErrorsZod error={errors?.zodErrors?.user} />
+        </div>
+
+        <div>
+          <Label htmlFor="status" className="flex items-center gap-1 mb-1">
+            {t("status")}
+          </Label>
+          <div className="flex items-center space-x-2">
+            <Switch checked={Boolean(status)} onCheckedChange={() => setStatus(!status)} />
+            <input type="hidden" name="status" value={status ? "true" : "false"} />
+            <span className="text-sm">{status ? t("paid") : t("unpaid")}</span>
+          </div>
         </div>
 
         {userPickerOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
             <UserPicker
               onSelect={(user) => {
-                setUserId(user.id);
+                setUser(user.id);
                 setUserName(user.name);
                 setUserPickerOpen(false);
               }}

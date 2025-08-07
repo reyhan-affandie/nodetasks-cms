@@ -24,7 +24,6 @@ export function DataTableHeader({
   parents,
   parentData,
   parentField,
-  totalData,
   t,
 }: {
   tableTitle?: string;
@@ -42,7 +41,6 @@ export function DataTableHeader({
   parents?: string;
   parentData?: ApiPayload;
   parentField?: string;
-  totalData: number;
   t: (key: string) => string;
 }) {
   const router = useRouter();
@@ -81,7 +79,7 @@ export function DataTableHeader({
           {sheetForm && setFormTitle && setSheetOpen && (
             <Sheet open={sheetOpen}>
               <SheetTrigger asChild className="cursor-pointer">
-                {canCreate && !(api === "cooperatives" && totalData === 1) && !(api === "proposals" && !parentData) ? (
+                {canCreate && (
                   <Button
                     className="h-10 max-lg:w-full lg:w-1/6"
                     onClick={() => {
@@ -91,7 +89,7 @@ export function DataTableHeader({
                   >
                     <span className="font-bold">{t("create")}</span>
                   </Button>
-                ) : null}
+                )}
               </SheetTrigger>
               {sheetForm}
             </Sheet>
