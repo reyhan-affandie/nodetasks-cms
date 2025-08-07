@@ -12,7 +12,7 @@ export function schema(t: (key: string) => string) {
       api: ModuleSchema,
       id: z.string().optional(),
 
-      userId: z.string().regex(regexNumber, { message: `${t("user")} ${t("required_field")}` }),
+      user: z.string().regex(regexNumber, { message: `${t("user")} ${t("required_field")}` }),
 
       title: z
         .string()
@@ -34,6 +34,14 @@ export function schema(t: (key: string) => string) {
         .string()
         .min(1, { message: `${t("end_time")} ${t("required_field")}` })
         .regex(regexTime, { message: `${t("end_time")} ${t("invalid_format")}` }),
+
+      status: z
+        .enum(["true", "false"], {
+          errorMap: () => ({ message: `${t("status")} ${t("invalid_format")}` }),
+        })
+        .refine((val) => val === "true" || val === "false", {
+          message: `${t("status")} ${t("required_field")}`,
+        }),
     })
     .superRefine((data, ctx) => {
       const isUpdate = data.formMethod === "update";

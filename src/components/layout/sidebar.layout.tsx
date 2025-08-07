@@ -130,11 +130,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <>
           <SidebarMenuItem
             className={`ml-8 flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer ${
-              pathname === `/${locale}/dashboard/events`
+              pathname.startsWith(`/${locale}/dashboard/events`)
                 ? "bg-blue-100 text-blue-800 font-semibold"
                 : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
             }`}
-            onClick={() => handleNavigate("dashboard/events")}
+            onClick={() => handleNavigate(`dashboard/events`)}
           >
             {t("dashboard_events")}
           </SidebarMenuItem>
@@ -183,9 +183,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       <SidebarMenu>
         <SidebarMenuItem
           className={`flex items-center px-3 py-2 rounded-md cursor-pointer select-none ${
-            pathname.includes("/tasks") && !pathname.includes("phases")
-              ? "bg-blue-100 text-blue-800 font-semibold"
-              : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
+            pathname.startsWith(`/${locale}/tasks`) ? "bg-blue-100 text-blue-800 font-semibold" : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
           }`}
           onClick={() => setTasksOpen((prev) => !prev)}
         >

@@ -51,6 +51,7 @@ export default function EventsPage() {
     { key: "dataDate", label: t("data_date"), sort: true, isImage: false, isFile: false },
     { key: "startTime", label: t("start_time"), sort: true, isImage: false, isFile: false },
     { key: "endTime", label: t("end_time"), sort: true, isImage: false, isFile: false },
+    { key: "status", label: t("status"), sort: false, isImage: false, isFile: false },
   ];
 
   const fetchData = useCallback(async () => {
