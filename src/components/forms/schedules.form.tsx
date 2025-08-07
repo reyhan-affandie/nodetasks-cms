@@ -120,12 +120,47 @@ export function ModuleForm({
     const result = await schedulesValidation(formData, locale);
     if (result) {
       setErrors(result);
-      toastMessage({ api, variant: "destructive", status: formState?.status, statusText: formState?.statusText });
+      toastMessage({
+        api,
+        variant: "destructive",
+        status: formState?.status,
+        statusText: formState?.statusText,
+      });
       setIsLoading(false);
       return;
     }
+
     setErrors(null);
-    formRef.current.requestSubmit();
+
+    try {
+      if (formRef.current?.requestSubmit) {
+        formRef.current.requestSubmit(); // will trigger formAction
+      } else {
+        // fallback if requestSubmit or server action fails
+        const result = await schedulesAction(null, formData, locale);
+        if (result?.error) {
+          toastMessage({
+            api,
+            variant: "destructive",
+            status: result.error,
+            statusText: result.message,
+          });
+          setErrors(result);
+        } else {
+          toastMessage({
+            api,
+            variant: "default",
+            status: 200,
+            statusText: "success",
+          });
+          reload();
+          setErrors(null);
+          // Optionally close modal here
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

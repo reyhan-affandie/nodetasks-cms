@@ -382,20 +382,35 @@ export default function EventsDashboardParam() {
                         </div>
                       )}
                       {/* Schedules behind */}
-                      <div className="absolute top-0 left-0 right-0 z-0">
-                        {assignColumns(schedules).map((item) => {
-                          const top = getTimeBlockTop(item.startTime as string);
-                          const height = getDurationHeight(item.startTime as string, item.endTime as string);
+                      <div className="absolute top-0 left-0 right-0 z-40 pointer-events-auto">
+                        {assignColumns(schedules).map((schedule) => {
+                          const top = getTimeBlockTop(schedule.startTime as string);
+                          const height = getDurationHeight(schedule.startTime as string, schedule.endTime as string);
                           return (
                             <Card
-                              key={item.id as number}
-                              className={cn("absolute p-2 bg-gray-500 text-white overflow-hidden whitespace-pre-wrap text-sm w-full")}
+                              key={schedule.id as number}
+                              onClick={() => {
+                                if (api === "schedules" && selectedData?.data?.id === schedule.id) {
+                                  setSelectedData({ ...FORM_INITIAL_STATE }); // unselect
+                                } else {
+                                  setSelectedData({ ...selectedData, data: schedule }); // select
+                                  setApi("schedules");
+                                }
+                              }}
+                              className={cn("absolute p-2 bg-gray-500 text-white overflow-hidden whitespace-pre-wrap text-sm w-full cursor-pointer")}
                               style={{ top, height }}
                             >
+                              {api === "schedules" && selectedData?.data?.id === schedule.id && (
+                                <div className="absolute bottom-1 left-1 z-20">
+                                  <div className="bg-blue-600 text-white p-1 rounded-md shadow-md">
+                                    <Pencil className="w-4 h-4" />
+                                  </div>
+                                </div>
+                              )}
                               <div className="font-bold text-xs">
-                                {item.startTime as string} - {item.endTime as string}
+                                {schedule.startTime as string} - {schedule.endTime as string}
                               </div>
-                              <div>{item.title as string}</div>
+                              <div>{schedule.title as string}</div>
                             </Card>
                           );
                         })}
@@ -424,7 +439,7 @@ export default function EventsDashboardParam() {
                                 <Card
                                   key={event.id as number}
                                   onClick={() => {
-                                    if (selectedData?.data?.id === event.id) {
+                                    if (api === "events" && selectedData?.data?.id === event.id) {
                                       setSelectedData({ ...FORM_INITIAL_STATE }); // unselect
                                     } else {
                                       setSelectedData({ ...selectedData, data: event }); // select
@@ -442,7 +457,7 @@ export default function EventsDashboardParam() {
                                       <CheckCircle size={14} />
                                     </div>
                                   )}
-                                  {selectedData?.data?.id === event.id && (
+                                  {api === "events" && selectedData?.data?.id === event.id && (
                                     <div className="absolute bottom-1 right-1 z-20">
                                       <div className="bg-blue-600 text-white p-1 rounded-md shadow-md">
                                         <Pencil className="w-4 h-4" />
