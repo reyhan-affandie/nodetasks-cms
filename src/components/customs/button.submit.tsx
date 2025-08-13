@@ -25,7 +25,13 @@ interface SubmitButtonProps {
 export function SubmitButton({ text, loadingText, loading, className, customOnClick }: Readonly<SubmitButtonProps>) {
   const status = useFormStatus();
   return (
-    <Button type="submit" aria-disabled={status.pending || loading} disabled={status.pending || loading} className={cn(className)} onClick={customOnClick}>
+    <Button
+      type="submit"
+      aria-disabled={status.pending || loading}
+      disabled={status.pending || loading}
+      className={cn(className, status.pending || loading ? "cursor-not-allowed" : "cursor-pointer")}
+      onClick={customOnClick}
+    >
       {status.pending || loading ? <Loader text={loadingText} /> : text}
     </Button>
   );
@@ -49,7 +55,13 @@ export function SpecialSubmitButton({
   const isDisabled = status.pending || loading || disabled;
 
   return (
-    <Button type="button" aria-disabled={isDisabled} disabled={isDisabled} className={className} onClick={onClick}>
+    <Button
+      type="button"
+      aria-disabled={isDisabled}
+      disabled={isDisabled}
+      className={`${className} ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+      onClick={onClick}
+    >
       {isDisabled ? <Loader text={loadingText} /> : text}
     </Button>
   );

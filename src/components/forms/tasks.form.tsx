@@ -5,13 +5,13 @@ import { tasksValidation, tasksAction } from "@/actions/tasks.actions";
 import { DefaultStateType, FORM_INITIAL_STATE } from "@/constants/global";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { ErrorsHandling, ErrorsZod } from "@/components/customs/errors";
-import { SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose } from "@/components/ui/sheet";
+import { SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { JustLogo } from "@/components/customs/logo";
 import { ApiPayload, Dispatcher } from "@/types/apiResult.type";
 import { Button } from "@/components/ui/button";
-import { toastMessage } from "@/components/customs/toast.message";
+import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/customs/image.upload";
 import { useLocale, useTranslations } from "next-intl";
@@ -52,7 +52,7 @@ export function ModuleForm({
 }) {
   const t = useTranslations();
   const locale = useLocale();
-  const formActionWithLocale:any = async (prevState: any, formData: FormData) => {
+  const formActionWithLocale: any = async (prevState: any, formData: FormData) => {
     return tasksAction(prevState, formData, locale);
   };
 
@@ -142,18 +142,13 @@ export function ModuleForm({
 
   useEffect(() => {
     if (formState?.error === true) {
-      toastMessage({
-        api: api,
-        variant: "destructive",
-        status: formState?.status,
-        statusText: formState?.statusText,
+      toast.error(api, {
+        description: formState?.status + " | " + formState?.statusText,
       });
     }
     if (formState?.error === false) {
       resetState();
-      toastMessage({
-        api: api,
-        variant: "default",
+      toast.success(formTitle + " | " + api, {
         description: formTitle === "create" ? "Data successfully created" : "Data successfully updated",
       });
       reload();
@@ -179,7 +174,9 @@ export function ModuleForm({
     const result = await tasksValidation(formData, locale);
     if (result) {
       setErrors(result);
-      toastMessage({ api, variant: "destructive", status: formState?.status, statusText: formState?.statusText });
+      toast.error(api, {
+        description: result?.message,
+      });
       setIsLoading(false);
       return;
     }
@@ -227,17 +224,16 @@ export function ModuleForm({
 
   return (
     <SheetContent side="left" className="bg-blue-50 pt-12 max-h-screen overflow-auto">
-      <form ref={formRef} action={formAction} className="p-4 border border-gray-300 rounded-md space-y-4">
-        <SheetHeader>
-          <SheetTitle className="bg-blue-950 text-white p-2 font-normal rounded-md">
+      <form ref={formRef} action={formAction} className="p-4 mx-4 border border-gray-300 rounded-md space-y-4">
+        <SheetHeader className="bg-blue-950 p-2 w-full font-normal rounded-md">
+          <SheetTitle className="text-white px-1">
             <div className="flex flex-row">
               <JustLogo />
-              <div className="flex flex-1 px-2 items-center">
+              <div className="flex flex-1 px-4 items-center">
                 {formTitle} {api}
               </div>
             </div>
           </SheetTitle>
-          <SheetDescription>&nbsp;</SheetDescription>
         </SheetHeader>
         <input id="formMethod" name="formMethod" type="hidden" defaultValue={formTitle} />
         <input id="api" name="api" type="hidden" defaultValue={api} />
@@ -341,10 +337,10 @@ export function ModuleForm({
                     setter(date);
                     setOpen(false);
                   }}
-                  initialFocus
-                  captionLayout="dropdown-buttons"
-                  fromYear={2000}
-                  toYear={new Date().getFullYear() + 10}
+                  captionLayout="dropdown"
+                  startMonth={new Date(2000, 0)}
+                  endMonth={new Date(new Date().getFullYear() + 10, 11)}
+                  hidden={[{ before: new Date(2000, 0, 1) }, { after: new Date(new Date().getFullYear() + 10, 11, 31) }]}
                 />
               </PopoverContent>
             </Popover>
@@ -384,12 +380,10 @@ export function ModuleForm({
           </div>
         )}
 
-        <SheetFooter className="flex flex-row space-x-1">
+        <SheetFooter className="flex flex-row w-full p-0 m-0">
+          <SpecialSubmitButton className="flex flex-1" text={t("save")} onClick={() => handleSubmit()} loading={isLoading} loadingText="Loading" />
           <SheetClose asChild className="flex flex-1">
-            <SpecialSubmitButton text={t("save")} onClick={() => handleSubmit()} loading={isLoading} loadingText="Loading" />
-          </SheetClose>
-          <SheetClose asChild className="flex flex-1">
-            <Button variant={"destructive"} onClick={resetState}>
+            <Button className="cursor-pointer" variant="destructive" onClick={resetState}>
               {t("close")}
             </Button>
           </SheetClose>

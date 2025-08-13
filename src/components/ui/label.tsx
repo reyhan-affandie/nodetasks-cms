@@ -2,20 +2,33 @@
 
 import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
-import { cva, type VariantProps } from "class-variance-authority";
-
 import { cn } from "@/lib/utils";
 
-const labelVariants = cva("text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70");
+type LabelProps = React.ComponentProps<typeof LabelPrimitive.Root> & {
+  required?: boolean;
+  asteriskClassName?: string;
+};
 
-const Label = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & VariantProps<typeof labelVariants> & { required?: boolean }
->(({ className, required, ...props }, ref) => (
-  <LabelPrimitive.Root ref={ref} className={cn(labelVariants(), className)} {...props}>
-    {props.children} {required && <span className="text-red-600">*</span>}
-  </LabelPrimitive.Root>
-));
-Label.displayName = LabelPrimitive.Root.displayName;
+function Label({ className, required, asteriskClassName, children, ...props }: LabelProps) {
+  return (
+    <LabelPrimitive.Root
+      data-slot="label"
+      data-required={required ? "true" : undefined}
+      aria-required={required || undefined}
+      className={cn(
+        "flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      {required && (
+        <span className={cn("text-red-600", asteriskClassName)} aria-hidden="true">
+          *
+        </span>
+      )}
+    </LabelPrimitive.Root>
+  );
+}
 
 export { Label };

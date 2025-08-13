@@ -11,7 +11,7 @@ import {
 import { bulkDeleteAction, deleteAction } from "@/actions/actions";
 import { ApiResultType, Dispatcher } from "@/types/apiResult.type";
 import { useEffect, useState } from "react";
-import { toastMessage } from "@/components/customs/toast.message";
+import { toast } from "sonner";
 import { DefaultStateType, FORM_INITIAL_STATE } from "@/constants/global";
 import { AlertDialogDescription } from "@radix-ui/react-alert-dialog";
 import { useTranslations } from "next-intl";
@@ -78,20 +78,14 @@ export function DataTableDelete({
   };
   useEffect(() => {
     if (formState?.error === true) {
-      resetState();
-      toastMessage({
-        api: api,
-        variant: "destructive",
-        status: formState?.status,
-        statusText: formState?.statusText,
+      toast.error(api, {
+        description: formState?.status + " | " + formState?.statusText,
       });
     }
     if (formState?.error === false) {
       resetState();
-      toastMessage({
-        api: api,
-        variant: "default",
-        description: "Data successfuly deleted",
+      toast.success(api, {
+        description: formState?.status + "Data successfully deleted",
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

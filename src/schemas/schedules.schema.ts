@@ -1,6 +1,6 @@
 import { MethodSchema } from "@/constants/global";
 import { z } from "zod";
-import { regexString, regexTime } from "@/lib/regex";
+import { regexDateTime, regexString } from "@/lib/regex";
 
 export function schema(t: (key: string) => string) {
   const ModuleSchema = z.enum(["schedules"]);
@@ -17,20 +17,15 @@ export function schema(t: (key: string) => string) {
         .max(191, { message: `${t("title")} ${t("max_characters")} 191` })
         .regex(regexString, { message: `${t("title")} ${t("invalid_format")}` }),
 
-      dataDate: z
+      startDateTime: z
         .string()
-        .min(1, { message: `${t("date")} ${t("required_field")}` })
-        .regex(/^\d{4}-\d{2}-\d{2}$/, { message: `${t("date")} ${t("invalid_format")}` }),
+        .min(1, { message: `${t("start_date_time")} ${t("required_field")}` })
+        .regex(regexDateTime, { message: `${t("start_date_time")} ${t("invalid_format")}` }),
 
-      startTime: z
+      endDateTime: z
         .string()
-        .min(1, { message: `${t("start_time")} ${t("required_field")}` })
-        .regex(regexTime, { message: `${t("start_time")} ${t("invalid_format")}` }),
-
-      endTime: z
-        .string()
-        .min(1, { message: `${t("end_time")} ${t("required_field")}` })
-        .regex(regexTime, { message: `${t("end_time")} ${t("invalid_format")}` }),
+        .min(1, { message: `${t("end_date_time")} ${t("required_field")}` })
+        .regex(regexDateTime, { message: `${t("end_date_time")} ${t("invalid_format")}` }),
     })
     .superRefine((data, ctx) => {
       const isUpdate = data.formMethod === "update";
@@ -47,15 +42,15 @@ export function schema(t: (key: string) => string) {
         return h * 60 + m;
       };
 
-      if (data.startTime && data.endTime) {
-        const start = parseTime(data.startTime);
-        const end = parseTime(data.endTime);
+      if (data.startDateTime && data.endDateTime) {
+        const start = parseTime(data.startDateTime);
+        const end = parseTime(data.endDateTime);
 
         if (end < start) {
           ctx.addIssue({
-            path: ["endTime"],
+            path: ["endDateTime"],
             code: z.ZodIssueCode.custom,
-            message: `${t("end_time")} ${t("invalid_format")}: ${t("end_time")} < ${t("start_time")}`,
+            message: `${t("endDateTime")} ${t("invalid_format")}: ${t("endDateTime")} < ${t("startDateTime")}`,
           });
         }
       }

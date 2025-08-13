@@ -51,9 +51,8 @@ export function ModuleView({
 
   const fields = [
     ["title", data?.title],
-    ["data_date", data?.dataDate ? format(new Date(data.dataDate as Date), "yyyy-MM-dd") : "-"],
-    ["start_time", data?.startTime],
-    ["end_time", data?.endTime],
+    ["start_date_time", data?.startDateTime],
+    ["end_date_time", data?.endDateTime],
     ["createdAt", data?.createdAt ? format(new Date(data.createdAt as Date), "MMM dd, yyyy HH:mm:ss") : "-"],
     ["updatedAt", data?.updatedAt ? format(new Date(data.updatedAt as Date), "MMM dd, yyyy HH:mm:ss") : "-"],
   ];
@@ -75,7 +74,7 @@ export function ModuleView({
           ))}
         </div>
         <AlertDialogFooter>
-          <Button variant="destructive" onClick={resetState}>
+          <Button className="cursor-pointer" variant="destructive" onClick={resetState}>
             {t("close")}
           </Button>
         </AlertDialogFooter>

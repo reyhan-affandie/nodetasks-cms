@@ -6,6 +6,26 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function debug(data: any) {
+  try {
+    return JSON.stringify(data, getCircularReplacer(), 2);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (e) {
+    return String(data);
+  }
+}
+
+export function getCircularReplacer() {
+  const seen = new WeakSet();
+  return (key: string, value: any) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) return "[Circular]";
+      seen.add(value);
+    }
+    return value;
+  };
+}
+
 export const cookiesConfig = {
   maxAge: 60 * 60 * 24 * 3, // 3 days
   path: "/",

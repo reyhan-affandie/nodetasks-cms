@@ -13,6 +13,8 @@ export async function eventsValidation(formData: FormData, locale: string) {
     data[key] = String(value);
   });
 
+  console.log("data1 ===> ", data);
+
   const validatedFields = schema(t).safeParse(data);
 
   if (!validatedFields.success) {
@@ -40,6 +42,8 @@ export async function eventsAction(
   formData.forEach((value, key) => {
     data[key] = String(value);
   });
+
+  console.log("data2 ===> ", data);
 
   const validatedFields = schema(t).safeParse(data);
 
