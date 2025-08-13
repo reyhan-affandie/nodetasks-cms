@@ -12,6 +12,7 @@ import { getAuthUser } from "@/actions/auth.actions";
 import { buildFeatureAccessMap } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getList } from "@/actions/actions";
+import Image from "next/image";
 
 interface MenuItem {
   key: string;
@@ -194,9 +195,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         {tasksOpen &&
           phases.map((p) => {
             let label = p.name;
-            if (locale === "id" && p.name_id) label = p.name_id;
+            if (locale === "en" && p.name_en) label = p.name_en;
+            else if (locale === "de" && p.name_de) label = p.name_de;
+            else if (locale === "nl" && p.name_nl) label = p.name_nl;
+            else if (locale === "id" && p.name_id) label = p.name_id;
             else if (locale === "ph" && p.name_ph) label = p.name_ph;
-            else if (locale === "en" && p.name_en) label = p.name_en;
 
             return (
               <SidebarMenuItem
@@ -227,8 +230,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar className="top-[--header-height] !h-[calc(100svh-var(--header-height))]" {...props}>
+    <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!" {...props}>
       <SidebarContent className="p-4">
+        <div className="flex flex-row gap-1 items-end border-b pb-5 md:hidden lg-hidden">
+          <Image src="/images/logo32.png" alt="Logo" width={32} height={32} />
+          <span className="text-2xl">{APP_NAME}</span>
+        </div>
         {isLoading ? (
           <div className="space-y-2">
             {[...Array(6)].map((_, idx) => (
@@ -240,8 +247,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             ))}
           </div>
         ) : (
-          <>
-            <div className="text-xs font-semibold text-muted-foreground uppercase px-3 pt-4 pb-2">Menu</div>
+          <div className="pt-4">
             <SidebarMenu>
               {renderDashboardMenu()}
               {renderEventsMenu()}
@@ -249,7 +255,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenu>
             {renderSection("Master Data", masterDataItems)}
             {renderSection("Admin", adminItems)}
-          </>
+          </div>
         )}
       </SidebarContent>
       <SidebarFooter>

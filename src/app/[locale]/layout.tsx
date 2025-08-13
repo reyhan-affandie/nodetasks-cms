@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import "./globals.css";
 import { Roboto } from "next/font/google"; // Import Roboto font
+import { Toaster } from "@/components/ui/sonner";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -12,7 +13,7 @@ const roboto = Roboto({
 });
 
 export async function generateStaticParams() {
-  return [{ locale: "en" }, { locale: "id" }];
+  return [{ locale: "en" }, { locale: "de" }, { locale: "nl" }, { locale: "id" }, { locale: "ph" }];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -25,6 +26,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       canonical: `${CMS_ORIGIN}/${locale}`,
       languages: {
         en: `${CMS_ORIGIN}/en`,
+        de: `${CMS_ORIGIN}/de`,
+        nl: `${CMS_ORIGIN}/nl`,
         id: `${CMS_ORIGIN}/id`,
         ph: `${CMS_ORIGIN}/ph`,
       },
@@ -45,6 +48,7 @@ export default async function RootLayout({ children, params }: Props) {
     <html lang={locale}>
       <body className={`${roboto.className} antialiased`}>
         <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+        <Toaster position="bottom-right" theme="light" richColors duration={3000} />
       </body>
     </html>
   );

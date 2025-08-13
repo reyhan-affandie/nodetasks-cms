@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { API_URL } from "@/constants/env";
 import { Switch } from "@/components/ui/switch";
 import { updateField } from "@/actions/actions";
-import { toastMessage } from "@/components/customs/toast.message";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -231,11 +231,8 @@ export function DataTableUI({
     } catch (error) {
       console.error("Error updating status:", error);
       setData((prevData) => prevData.map((item) => (item.id === id ? { ...item, [field]: !checked } : item)));
-      toastMessage({
-        api: api,
-        variant: "destructive",
-        status: 500,
-        statusText: "Unknown error, please contact our customer support. thank you",
+      toast.error("Unknown error", {
+        description: "please contact our customer support. thank you",
       });
     }
   };
@@ -273,10 +270,10 @@ export function DataTableUI({
 
   const handlePreviewEvent = (item: ApiPayload) => {
     const userId = item.userId as number;
-    const dataDate = item.dataDate as string;
-    if (!userId || !dataDate) return;
+    const startDateTime = item.startDateTime as string;
+    if (!userId || !startDateTime) return;
 
-    const formattedDate = new Date(dataDate).toISOString().split("T")[0];
+    const formattedDate = new Date(startDateTime).toISOString().split("T")[0];
     const localePrefix = pathname.split("/")[1]; // e.g., "en"
     const basePath = `/${localePrefix}/dashboard/events`;
 
@@ -445,7 +442,7 @@ export function DataTableUI({
                             <DropdownMenuContent align="end">
                               {(api === "events" || api === "schedules") && (
                                 <DropdownMenuItem asChild>
-                                  <Button variant="secondary" className="border-b w-full cursor-pointer" onClick={() => handlePreviewEvent(item)}>
+                                  <Button variant="green" className="border-b w-full cursor-pointer" onClick={() => handlePreviewEvent(item)}>
                                     {t("view")} {t("dashboard")}
                                   </Button>
                                 </DropdownMenuItem>

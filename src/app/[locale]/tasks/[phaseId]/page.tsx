@@ -4,7 +4,7 @@ import { getList, getOne } from "@/actions/actions";
 import DefaultLayout from "@/components/layout/app.layout";
 import { useCallback, useEffect, useState } from "react";
 import { TableSkeleton } from "@/components/table/data.table.skeleton";
-import { toastMessage } from "@/components/customs/toast.message";
+import { toast } from "sonner";
 import { DefaultStateType, FORM_INITIAL_STATE } from "@/constants/global";
 import { DataTableDelete } from "@/components/table/data.table.delete";
 import { DataTableUI } from "@/components/table/data.table";
@@ -70,9 +70,11 @@ export default function TasksPhasePage() {
       const phase = phaseRes?.data;
       if (!phase) return setPhaseLabel("");
       let label = phase.name;
-      if (locale === "id" && phase.name_id) label = phase.name_id;
+      if (locale === "en" && phase.name_en) label = phase.name_en;
+      else if (locale === "de" && phase.name_de) label = phase.name_de;
+      else if (locale === "nl" && phase.name_nl) label = phase.name_nl;
+      else if (locale === "id" && phase.name_id) label = phase.name_id;
       else if (locale === "ph" && phase.name_ph) label = phase.name_ph;
-      else if (locale === "en" && phase.name_en) label = phase.name_en;
       setPhaseLabel(label);
     }
     fetchPhaseLabel();
@@ -108,11 +110,8 @@ export default function TasksPhasePage() {
       }
     } catch (error) {
       console.error(error);
-      toastMessage({
-        api: api,
-        variant: "destructive",
-        status: 500,
-        statusText: "Unknown error, please contact our customer support. thank you",
+      toast.error("Unknown error", {
+        description: "please contact our customer support. thank you",
       });
     } finally {
       setIsLoading(false);

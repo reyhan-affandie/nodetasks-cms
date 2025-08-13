@@ -6,7 +6,7 @@ import { Locale } from "@/i18n/config";
 import { checkLangService } from "@/services/services";
 import { buildFeatureAccessMap, hasAnyPermission } from "@/lib/utils";
 
-const locales = ["en", "id", "ph"];
+const locales = ["en", "de", "nl", "id", "ph"];
 const baseProtectedRoutes = ["dashboard", "features", "phases", "priorities", "roles", "tasks", "users"];
 
 function isProtectedRoute(path: string) {

@@ -4,7 +4,7 @@ import { getList, getOne } from "@/actions/actions";
 import DefaultLayout from "@/components/layout/app.layout";
 import { useCallback, useEffect, useState } from "react";
 import { TableSkeleton } from "@/components/table/data.table.skeleton";
-import { toastMessage } from "@/components/customs/toast.message";
+import { toast } from "sonner";
 import { DefaultStateType, FORM_INITIAL_STATE } from "@/constants/global";
 import { DataTableDelete } from "@/components/table/data.table.delete";
 import { DataTableUI } from "@/components/table/data.table";
@@ -24,7 +24,7 @@ export default function EventsPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("dataDate");
+  const [sort, setSort] = useState("startDateTime");
   const [order, setOrder] = useState("desc");
   const [totalData, setTotalData] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -48,9 +48,8 @@ export default function EventsPage() {
     { key: "no", label: "No", sort: false, isImage: false, isFile: false },
     { key: "title", label: t("title"), sort: true, isImage: false, isFile: false },
     { key: "user.name", label: t("name"), sort: true, isImage: false, isFile: false },
-    { key: "dataDate", label: t("data_date"), sort: true, isImage: false, isFile: false },
-    { key: "startTime", label: t("start_time"), sort: true, isImage: false, isFile: false },
-    { key: "endTime", label: t("end_time"), sort: true, isImage: false, isFile: false },
+    { key: "startDateTime", label: t("start_date_time"), sort: true, isImage: false, isFile: false },
+    { key: "endDateTime", label: t("end_date_time"), sort: true, isImage: false, isFile: false },
     { key: "status", label: t("status"), sort: false, isImage: false, isFile: false },
   ];
 
@@ -63,7 +62,8 @@ export default function EventsPage() {
           x: false,
           no: (page - 1) * 10 + (index + 1),
           ...item,
-          dataDate: item.dataDate ? format(new Date(item.dataDate as Date), "MMM dd, yyyy") : "-",
+          startDateTime: item.startDateTime ? format(new Date(item.startDateTime as Date), "MMM dd, yyyy HH:mm") : "-",
+          endDateTime: item.endDateTime ? format(new Date(item.endDateTime as Date), "MMM dd, yyyy HH:mm") : "-",
         }));
         setData(resDataTable);
         setPage(res?.data?.page);
@@ -83,11 +83,8 @@ export default function EventsPage() {
       }
     } catch (error) {
       console.error(error);
-      toastMessage({
-        api: api,
-        variant: "destructive",
-        status: 500,
-        statusText: "Unknown error, please contact our customer support. thank you",
+      toast.error("Unknown error", {
+        description: "please contact our customer support. thank you",
       });
     } finally {
       setIsLoading(false);
@@ -103,7 +100,7 @@ export default function EventsPage() {
 
   useEffect(() => {
     fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getOneData = async () => {
@@ -130,12 +127,12 @@ export default function EventsPage() {
 
   useEffect(() => {
     if (refreshTableData === true) fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshTableData, search, sort, order, page, limit]);
 
   useEffect(() => {
     if (selectedDataId !== 0) getOneData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDataId, formTitle]);
 
   useEffect(() => {

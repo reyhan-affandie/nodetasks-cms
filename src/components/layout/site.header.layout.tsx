@@ -1,6 +1,6 @@
 "use client";
 
-import { SidebarIcon } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -37,10 +37,10 @@ export function SiteHeader() {
   }, []);
 
   return (
-    <header className="flex fixed top-0 z-50 w-full items-center border-b bg-background justify-between px-4">
-      <div className="hidden md:flex h-[--header-height] items-center gap-2">
-        <Button className="h-8 w-8" variant="ghost" size="icon" onClick={toggleSidebar}>
-          <SidebarIcon />
+    <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b justify-between px-4 py-2">
+      <div className="hidden md:flex h-(--header-height) items-center gap-2 py-2">
+        <Button onClick={toggleSidebar}>
+          <Menu />
         </Button>
         <Separator orientation="vertical" className="mr-2 h-4" />
         <div className="flex flex-row gap-1 items-end">
@@ -50,8 +50,8 @@ export function SiteHeader() {
         <Separator orientation="vertical" className="mr-2 h-4" />
         <span>{APP_SLOGAN}</span>
       </div>
-      <Button className="md:hidden h-8 w-8" variant="ghost" size="icon" onClick={toggleSidebar}>
-        <SidebarIcon />
+      <Button className="md:hidden" onClick={toggleSidebar}>
+        <Menu />
       </Button>
       <div className="flex items-center gap-4 ml-auto">
         <NavUser isLoading={isLoading} user={data} />

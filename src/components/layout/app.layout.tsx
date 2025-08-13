@@ -14,7 +14,7 @@ export default function DefaultLayout({ children }: DefaultLayoutProps) {
         <SiteHeader />
         <div className="flex flex-1 h-full">
           <AppSidebar />
-          <SidebarInset className="w-full p-4 md:p-8 pt-14 md:pt-20 overflow-hidden">{children}</SidebarInset>
+          <SidebarInset className="p-4 overflow-hidden">{children}</SidebarInset>
         </div>
       </SidebarProvider>
     </div>
