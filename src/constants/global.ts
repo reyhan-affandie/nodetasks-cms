@@ -1,7 +1,7 @@
 import { ApiResultType } from "@/types/apiResult.type";
 import { z } from "zod";
 
-export const LANGUAGES = ["en", "id", "ph"];
+export const LANGUAGES = ["en", "de", "nl", "id", "ph"];
 
 export interface DefaultStateType {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

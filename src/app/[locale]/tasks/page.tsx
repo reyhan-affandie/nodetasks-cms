@@ -4,7 +4,7 @@ import { getList, getOne } from "@/actions/actions";
 import DefaultLayout from "@/components/layout/app.layout";
 import { useCallback, useEffect, useState } from "react";
 import { TableSkeleton } from "@/components/table/data.table.skeleton";
-import { toastMessage } from "@/components/customs/toast.message";
+import { toast } from "sonner";
 import { DefaultStateType, FORM_INITIAL_STATE } from "@/constants/global";
 import { DataTableDelete } from "@/components/table/data.table.delete";
 import { DataTableUI } from "@/components/table/data.table";
@@ -88,11 +88,8 @@ export default function TasksPage() {
       }
     } catch (error) {
       console.error(error);
-      toastMessage({
-        api: api,
-        variant: "destructive",
-        status: 500,
-        statusText: "Unknown error, please contact our customer support. thank you",
+      toast.error("Unknown error", {
+        description: "please contact our customer support. thank you",
       });
     } finally {
       setIsLoading(false);

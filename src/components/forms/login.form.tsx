@@ -14,6 +14,7 @@ import { FORM_INITIAL_STATE } from "@/constants/global";
 import { useRouter } from "next/navigation";
 import { ErrorsHandling, ErrorsZod } from "@/components/customs/errors";
 import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const t = useTranslations();
@@ -24,8 +25,12 @@ export function LoginForm() {
 
   useEffect(() => {
     if (formState?.success === true) {
+      toast.success("", {
+        description: t("login_successful"),
+      });
       router.refresh();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formState, router]);
 
   return (

@@ -1,25 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { eventsValidation, eventsAction } from "@/actions/events.actions";
-import { DefaultStateType, FORM_INITIAL_STATE } from "@/constants/global";
-import { useActionState, useEffect, useRef, useState } from "react";
-import { ErrorsHandling, ErrorsZod } from "@/components/customs/errors";
-import { SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose } from "@/components/ui/sheet";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { JustLogo } from "@/components/customs/logo";
-import { ApiPayload, Dispatcher } from "@/types/apiResult.type";
-import { Button } from "@/components/ui/button";
-import { toastMessage } from "@/components/customs/toast.message";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { SpecialSubmitButton } from "@/components/customs/button.submit";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+
+import { eventsAction, eventsValidation } from "@/actions/events.actions";
+import { DefaultStateType, FORM_INITIAL_STATE } from "@/constants/global";
+import { ApiPayload, Dispatcher } from "@/types/apiResult.type";
+
+import { SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import UserPicker from "@/components/pickers/users.picker";
 import { Switch } from "@/components/ui/switch";
+
+import { JustLogo } from "@/components/customs/logo";
+import { SpecialSubmitButton } from "@/components/customs/button.submit";
+import { ErrorsHandling, ErrorsZod } from "@/components/customs/errors";
+import UserPicker from "@/components/pickers/users.picker";
+import { toast } from "sonner";
+
+/** Helpers to format local date/time */
+const pad = (n: number) => String(n).padStart(2, "0");
+const formatLocalDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const formatLocalTime = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+/** Combine a picked calendar date + "HH:mm" into a UTC ISO string */
+function combineLocalISO(date?: Date, hhmm?: string) {
+  if (!date || !hhmm) return "";
+  const [hh, mm] = hhmm.split(":").map((n) => parseInt(n, 10));
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hh || 0, mm || 0, 0, 0);
+  return d.toISOString();
+}
 
 export function ModuleForm({
   api,
@@ -48,41 +63,56 @@ export function ModuleForm({
 }) {
   const t = useTranslations();
   const locale = useLocale();
+
   const formActionWithLocale: any = async (prevState: any, formData: FormData) => {
     return eventsAction(prevState, formData, locale);
   };
-
   const [formState, formAction] = useActionState(formActionWithLocale, selectedData);
+
   const [errors, setErrors] = useState<typeof formState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [user, setUser] = useState(selectedData?.data?.userId ?? "");
-  const [userName, setUserName] = useState(selectedData?.data?.user?.name ?? "");
+  // Initial values
+  const initialStartDate = selectedData?.data?.startDateTime ? new Date(String(selectedData.data.startDateTime)) : undefined;
+  const initialEndDate = selectedData?.data?.endDateTime ? new Date(String(selectedData.data.endDateTime)) : undefined;
+
+  const [title, setTitle] = useState<string>(selectedData?.data?.title || "");
+  const [user, setUser] = useState<string | number>(selectedData?.data?.userId ?? "");
+  const [userName, setUserName] = useState<string>(selectedData?.data?.user?.name ?? "");
+  const [status, setStatus] = useState<boolean>(Boolean(selectedData?.data?.status));
+
+  const [startDate, setStartDate] = useState<Date | undefined>(initialStartDate);
+  const [endDate, setEndDate] = useState<Date | undefined>(initialEndDate);
+  const [startTime, setStartTime] = useState<string>(initialStartDate ? formatLocalTime(initialStartDate) : "");
+  const [endTime, setEndTime] = useState<string>(initialEndDate ? formatLocalTime(initialEndDate) : "");
+  const [openStartDate, setOpenStartDate] = useState(false);
+  const [openEndDate, setOpenEndDate] = useState(false);
+
+  const startISO = useMemo(() => combineLocalISO(startDate, startTime), [startDate, startTime]);
+  const endISO = useMemo(() => combineLocalISO(endDate, endTime), [endDate, endTime]);
+
   const [userPickerOpen, setUserPickerOpen] = useState(false);
-
-  const [dataDate, setDataDate] = useState<Date | undefined>(selectedData?.data?.dataDate ? new Date(selectedData.data.dataDate) : undefined);
-  const [startTime, setStartTime] = useState(selectedData?.data?.startTime || "");
-  const [endTime, setEndTime] = useState(selectedData?.data?.endTime || "");
-  const [title, setTitle] = useState(selectedData?.data?.title || "");
-  const [status, setStatus] = useState<boolean>(selectedData?.data?.status ?? false);
-
-  const [openDate, setOpenDate] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (selectedData?.data !== null && formTitle === "update") {
+      const s = selectedData.data.startDateTime ? new Date(String(selectedData.data.startDateTime)) : undefined;
+      const e = selectedData.data.endDateTime ? new Date(String(selectedData.data.endDateTime)) : undefined;
+
       setTitle(selectedData.data.title || "");
       setUser(selectedData.data.userId ?? "");
       setUserName(selectedData.data.user?.name ?? "");
-      setDataDate(selectedData.data.dataDate ? new Date(selectedData.data.dataDate) : undefined);
-      setStartTime(selectedData.data.startTime || "");
-      setEndTime(selectedData.data.endTime || "");
-      setStatus(selectedData.data.status || false);
+      setStartDate(s);
+      setEndDate(e);
+      setStartTime(s ? formatLocalTime(s) : "");
+      setEndTime(e ? formatLocalTime(e) : "");
+      setStatus(Boolean(selectedData.data.status));
     } else if (formTitle === "create") {
       setTitle("");
       setUser("");
       setUserName("");
-      setDataDate(undefined);
+      setStartDate(undefined);
+      setEndDate(undefined);
       setStartTime("");
       setEndTime("");
       setStatus(false);
@@ -97,20 +127,24 @@ export function ModuleForm({
     setSelectCount(0);
     setFormTitle("");
     setSheetOpen(false);
-    formState.data = null;
-    formState.zodErrors = null;
-    formState.error = null;
-    formState.message = null;
-    setData((prevData) => prevData.map((item) => ({ ...item, x: false })));
+    formState.data = null as any;
+    formState.zodErrors = null as any;
+    formState.error = null as any;
+    formState.message = null as any;
+    setData((prev) => prev.map((item) => ({ ...item, x: false })));
   };
 
   useEffect(() => {
     if (formState?.error === true) {
-      toastMessage({ api, variant: "destructive", status: formState?.status, statusText: formState?.statusText });
+      toast.error(api, {
+        description: formState?.status + " | " + formState?.statusText,
+      });
     }
     if (formState?.error === false) {
       resetState();
-      toastMessage({ api, variant: "default", description: formTitle === "create" ? "Data successfully created" : "Data successfully updated" });
+      toast.success(formTitle + " | " + api, {
+        description: formTitle === "create" ? "Data successfully created" : "Data successfully updated",
+      });
       reload();
     }
     setIsLoading(false);
@@ -121,72 +155,39 @@ export function ModuleForm({
     setIsLoading(true);
     if (!formRef.current) return;
 
-    const formData = new FormData(formRef.current);
-    formData.set("userId", user ?? "");
-    if (dataDate) formData.set("dataDate", format(dataDate, "yyyy-MM-dd"));
-    formData.set("startTime", startTime);
-    formData.set("endTime", endTime);
+    const fd = new FormData(formRef.current);
+    fd.set("user", String(user));
+    fd.set("startDateTime", startISO);
+    fd.set("endDateTime", endISO);
+    fd.set("status", status ? "true" : "false");
 
-    const result = await eventsValidation(formData, locale);
+    const result = await eventsValidation(fd, locale);
     if (result) {
       setErrors(result);
-      toastMessage({
-        api,
-        variant: "destructive",
-        status: formState?.status,
-        statusText: formState?.statusText,
+      toast.error(api, {
+        description: result?.message,
       });
       setIsLoading(false);
       return;
     }
-
     setErrors(null);
-
-    try {
-      if (formRef.current?.requestSubmit) {
-        formRef.current.requestSubmit(); // will trigger formAction
-      } else {
-        // fallback if requestSubmit or server action fails
-        const result = await eventsAction(null, formData, locale);
-        if (result?.error) {
-          toastMessage({
-            api,
-            variant: "destructive",
-            status: result.error,
-            statusText: result.message,
-          });
-          setErrors(result);
-        } else {
-          toastMessage({
-            api,
-            variant: "default",
-            status: 200,
-            statusText: "success",
-          });
-          reload();
-          setErrors(null);
-          // Optionally close modal here
-        }
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    formRef.current.requestSubmit();
   };
 
   return (
     <SheetContent side="left" className="bg-blue-50 pt-12 max-h-screen overflow-auto">
-      <form ref={formRef} action={formAction} className="p-4 border border-gray-300 rounded-md space-y-4">
-        <SheetHeader>
-          <SheetTitle className="bg-blue-950 text-white p-2 font-normal rounded-md">
+      <form ref={formRef} action={formAction} className="p-4 mx-4 border border-gray-300 rounded-md space-y-4">
+        <SheetHeader className="bg-blue-950 p-2 w-full font-normal rounded-md">
+          <SheetTitle className="text-white px-1">
             <div className="flex flex-row">
               <JustLogo />
-              <div className="flex flex-1 px-2 items-center">
+              <div className="flex flex-1 px-4 items-center">
                 {formTitle} {api}
               </div>
             </div>
           </SheetTitle>
-          <SheetDescription>&nbsp;</SheetDescription>
         </SheetHeader>
+
         <input id="formMethod" name="formMethod" type="hidden" defaultValue={formTitle} />
         <input id="api" name="api" type="hidden" defaultValue={api} />
         <input id="id" name="id" type="hidden" defaultValue={selectedData?.data?.id} />
@@ -199,73 +200,92 @@ export function ModuleForm({
           <ErrorsZod error={errors?.zodErrors?.title} />
         </div>
 
-        <div>
-          <Label htmlFor="dataDate" className="flex items-center gap-1 mb-1" required>
-            {t("data_date")}
-          </Label>
-          <Popover open={openDate} onOpenChange={setOpenDate}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={`w-full justify-start text-left font-normal border-blue-400 bg-blue-50 ${!dataDate ? "text-muted-foreground" : ""}`}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dataDate ? format(dataDate, "yyyy-MM-dd") : t("choose_date")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 border border-blue-400 bg-white shadow-md rounded-md" align="start">
-              <Calendar
-                mode="single"
-                selected={dataDate}
-                onSelect={(date) => {
-                  setDataDate(date);
-                  setOpenDate(false);
-                }}
-                initialFocus
-                captionLayout="dropdown-buttons"
-                fromYear={2000}
-                toYear={new Date().getFullYear() + 10}
-              />
-            </PopoverContent>
-          </Popover>
-          <input type="hidden" name="dataDate" value={dataDate ? format(dataDate, "yyyy-MM-dd") : ""} />
-          <ErrorsZod error={errors?.zodErrors?.dataDate} />
+        {/* Date / Time grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Start Date */}
+          <div>
+            <Label htmlFor="startDate" className="flex items-center gap-1 mb-1" required>
+              {t("start_date")}
+            </Label>
+            <Popover open={openStartDate} onOpenChange={setOpenStartDate}>
+              <PopoverTrigger asChild>
+                <Button
+                  id="startDate"
+                  type="button"
+                  variant="outline"
+                  className={`cursor-pointer w-full justify-start text-left border-blue-400 bg-blue-50 ${!startDate ? "text-muted-foreground" : ""}`}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? formatLocalDate(startDate) : "Select date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 border border-blue-400 bg-white shadow-md rounded-md" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  captionLayout="dropdown"
+                  onSelect={(d) => {
+                    setStartDate(d || undefined);
+                    setOpenStartDate(false);
+                  }}
+                  hidden={[{ before: new Date(2000, 0, 1) }, { after: new Date(new Date().getFullYear() + 10, 11, 31) }]}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Start Time */}
+          <div>
+            <Label htmlFor="startClock" className="flex items-center gap-1 mb-1" required>
+              {t("start_time")}
+            </Label>
+            <Input type="time" id="startClock" step={60} value={startTime} onChange={(e) => setStartTime(e.target.value)} className="border-blue-400" />
+            <ErrorsZod error={errors?.zodErrors?.startDateTime} />
+          </div>
+
+          {/* End Date */}
+          <div>
+            <Label htmlFor="endDate" className="flex items-center gap-1 mb-1" required>
+              {t("end_date")}
+            </Label>
+            <Popover open={openEndDate} onOpenChange={setOpenEndDate}>
+              <PopoverTrigger asChild>
+                <Button
+                  id="endDate"
+                  type="button"
+                  variant="outline"
+                  className={`cursor-pointer w-full justify-start text-left border-blue-400 bg-blue-50 ${!endDate ? "text-muted-foreground" : ""}`}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? formatLocalDate(endDate) : "Select date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 border border-blue-400 bg-white shadow-md rounded-md" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  captionLayout="dropdown"
+                  onSelect={(d) => {
+                    setEndDate(d || undefined);
+                    setOpenEndDate(false);
+                  }}
+                  hidden={[{ before: new Date(2000, 0, 1) }, { after: new Date(new Date().getFullYear() + 10, 11, 31) }]}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* End Time */}
+          <div>
+            <Label htmlFor="endClock" className="flex items-center gap-1 mb-1" required>
+              {t("end_time")}
+            </Label>
+            <Input type="time" id="endClock" step={60} value={endTime} onChange={(e) => setEndTime(e.target.value)} className="border-blue-400" />
+            <ErrorsZod error={errors?.zodErrors?.endDateTime} />
+          </div>
         </div>
 
-        <div>
-          <Label htmlFor="startTime" className="flex items-center gap-1 mb-1" required>
-            {t("start_time")}
-          </Label>
-          <Input
-            id="startTime"
-            name="startTime"
-            type="text"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            maxLength={5}
-            className="border-blue-400"
-            placeholder="HH:mm"
-          />
-          <ErrorsZod error={errors?.zodErrors?.startTime} />
-        </div>
-
-        <div>
-          <Label htmlFor="endTime" className="flex items-center gap-1 mb-1" required>
-            {t("end_time")}
-          </Label>
-          <Input
-            id="endTime"
-            name="endTime"
-            type="text"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            maxLength={5}
-            className="border-blue-400"
-            placeholder="HH:mm"
-          />
-          <ErrorsZod error={errors?.zodErrors?.endTime} />
-        </div>
-
+        {/* User picker */}
         <div>
           <Label htmlFor="user" className="flex items-center gap-1 mb-1">
             {t("name")}
@@ -274,16 +294,17 @@ export function ModuleForm({
             <Button
               type="button"
               variant="outline"
-              className="flex-1 border-blue-400 bg-blue-50 justify-start text-left"
+              className="cursor-pointer flex-1 border-blue-400 bg-blue-50 justify-start text-left"
               onClick={() => setUserPickerOpen(true)}
             >
               {userName ? userName : t("choose_user")}
             </Button>
           </div>
-          <input type="hidden" name="user" value={user ?? ""} />
+          <input type="hidden" name="user" value={user ? String(user) : ""} />
           <ErrorsZod error={errors?.zodErrors?.user} />
         </div>
 
+        {/* Status */}
         <div>
           <Label htmlFor="status" className="flex items-center gap-1 mb-1">
             {t("status")}
@@ -295,12 +316,15 @@ export function ModuleForm({
           </div>
         </div>
 
+        <input type="hidden" name="startDateTime" value={startISO} />
+        <input type="hidden" name="endDateTime" value={endISO} />
+
         {userPickerOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <UserPicker
-              onSelect={(user) => {
-                setUser(user.id);
-                setUserName(user.name);
+              onSelect={(u) => {
+                setUser(u.id);
+                setUserName(u.name);
                 setUserPickerOpen(false);
               }}
               onClose={() => setUserPickerOpen(false)}
@@ -308,16 +332,15 @@ export function ModuleForm({
           </div>
         )}
 
-        <SheetFooter className="flex flex-row space-x-1">
+        <SheetFooter className="flex flex-row w-full p-0 m-0">
+          <SpecialSubmitButton className="flex flex-1" text={t("save")} onClick={() => handleSubmit()} loading={isLoading} loadingText="Loading" />
           <SheetClose asChild className="flex flex-1">
-            <SpecialSubmitButton text={t("save")} {...{ onClick: () => handleSubmit(), loading: isLoading, loadingText: "Loading" }} />
-          </SheetClose>
-          <SheetClose asChild className="flex flex-1">
-            <Button variant="destructive" onClick={resetState}>
+            <Button className="cursor-pointer" variant="destructive" onClick={resetState}>
               {t("close")}
             </Button>
           </SheetClose>
         </SheetFooter>
+
         <ErrorsHandling error={errors?.message} />
         <ErrorsHandling error={formState?.message} />
       </form>

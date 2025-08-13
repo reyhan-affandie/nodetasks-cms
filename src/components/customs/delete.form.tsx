@@ -8,7 +8,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { deleteAction } from "@/actions/actions";
-import { toastMessage } from "@/components/customs/toast.message";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -32,9 +32,13 @@ export default function DeleteDialog({ id, api, description, open, onClose, onSu
     setLoading(false);
     if (result?.error) {
       setError(result.statusText || "Failed to delete");
-      toastMessage({ api, variant: "destructive", status: result.status, statusText: result.statusText });
+      toast.error(api, {
+        description: result.status + " | " + result.statusText,
+      });
     } else {
-      toastMessage({ api, variant: "default", description: "Data successfully deleted" });
+      toast.success(api, {
+        description: result.status + " | " + "Data successfully deleted",
+      });
       onClose();
       onSuccess?.();
     }

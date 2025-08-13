@@ -16,6 +16,8 @@ import { useLocale } from "next-intl";
 
 const locales = [
   { code: "en", label: "English", flag: "/images/en.webp" },
+  { code: "de", label: "Deutsch", flag: "/images/de.webp" },
+  { code: "nl", label: "Nederlands", flag: "/images/nl.webp" },
   { code: "id", label: "Bahasa Indonesia", flag: "/images/id.webp" },
   { code: "ph", label: "Filipino", flag: "/images/ph.webp" },
 ] as const;
