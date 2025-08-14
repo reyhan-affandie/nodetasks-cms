@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { format } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -9,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 export function debug(data: any) {
   try {
     return JSON.stringify(data, getCircularReplacer(), 2);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     return String(data);
   }
@@ -33,6 +34,57 @@ export const cookiesConfig = {
   secure: true,
 };
 
+export const safeFormatDateTime = (dt?: string | Date) => {
+  if (!dt) return "-";
+  const d = new Date(dt);
+  return isNaN(d.getTime()) ? "-" : format(d, "MMM dd, yyyy HH:mm");
+  // If you prefer localised formatting later, you can swap format out.
+};
+
+export const safeFormatDate = (dt?: string | Date) => {
+  if (!dt) return "-";
+  const d = new Date(dt);
+  return isNaN(d.getTime()) ? "-" : format(d, "MMM dd, yyyy");
+  // If you prefer localised formatting later, you can swap format out.
+};
+
+export const formatAmount = (v: unknown) => {
+  if (v === undefined || v === null || v === "") return "-";
+  try {
+    // Handle bigint / string / number safely without BigInt literals
+    let s: string;
+    if (typeof v === "bigint") s = v.toString();
+    else if (typeof v === "number") s = Math.trunc(v).toString();
+    else s = String(v);
+
+    // Strip non-digits just in case input contains commas or spaces
+    const digits = s.replace(/[^\d-]/g, "");
+    if (!digits) return "-";
+
+    // Keep as string to avoid precision loss on very large values
+    // Add basic thousands separators
+    const negative = digits.startsWith("-");
+    const body = negative ? digits.slice(1) : digits;
+    const withSep = body.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+    return `${negative ? "-" : ""}${withSep}`;
+  } catch {
+    return "-";
+  }
+};
+
+export const formatAmountInput = (value: string) => {
+  // integers only (BigInt-compatible). If you need decimals later, say the word.
+  const raw = (value ?? "").replace(/[^\d-]/g, "");
+  if (!raw) return { formatted: "", raw: "" };
+
+  const negative = raw.startsWith("-");
+  const body = negative ? raw.slice(1) : raw;
+  const formatted = `${negative ? "-" : ""}${body.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+
+  return { formatted, raw };
+};
+
 export function formatNumberInput(value: string) {
   const raw = value.replace(/,/g, "");
   if (isNaN(Number(raw))) return { formatted: "", raw: "" };
@@ -46,6 +98,19 @@ export function formatNumberInput(value: string) {
     raw,
   };
 }
+
+export const formatNumericValue = (value: unknown): string => {
+  if (typeof value === "number" || typeof value === "bigint") {
+    return Number(value).toLocaleString("en-US");
+  }
+
+  if (typeof value === "string" && /^[0-9]+$/.test(value)) {
+    return Number(value).toLocaleString("en-US");
+  }
+
+  return String(value);
+};
+
 export const buildFeatureAccessMap = (user: any) => {
   const map: Record<
     string,

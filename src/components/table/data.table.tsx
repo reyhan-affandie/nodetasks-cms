@@ -21,7 +21,7 @@ import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getAuthUser } from "@/actions/auth.actions";
-import { buildFeatureAccessMap } from "@/lib/utils";
+import { buildFeatureAccessMap, formatNumericValue } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 export function DataTableUI({
@@ -242,18 +242,6 @@ export function DataTableUI({
     return path.split(".").reduce((acc, key) => acc?.[key], obj);
   };
 
-  const formatNumericValue = (value: unknown): string => {
-    if (typeof value === "number" || typeof value === "bigint") {
-      return Number(value).toLocaleString("id-ID");
-    }
-
-    if (typeof value === "string" && /^[0-9]+$/.test(value)) {
-      return Number(value).toLocaleString("id-ID");
-    }
-
-    return String(value);
-  };
-
   function PriorityBadge({ value }: { value: string }) {
     const v = value?.toLowerCase();
     let variant: "default" | "secondary" | "destructive" | "outline" = "default";
@@ -373,7 +361,12 @@ export function DataTableUI({
                             }}
                           >
                             {/* PRIORITY BADGE */}
-                            {(column.key === "priority.name_en" || column.key === "priority.name_id" || column.key === "priority.name_ph") && value ? (
+                            {(column.key === "priority.name_en" ||
+                              column.key === "priority.name_de" ||
+                              column.key === "priority.name_nl" ||
+                              column.key === "priority.name_id" ||
+                              column.key === "priority.name_ph") &&
+                            value ? (
                               // Supports both string and object with .name
                               typeof value === "string" ? (
                                 <PriorityBadge value={value} />
@@ -425,8 +418,10 @@ export function DataTableUI({
                               ) : (
                                 formatNumericValue(value)
                               )
-                            ) : (
+                            ) : value ? (
                               formatNumericValue(value)
+                            ) : (
+                              "-"
                             )}
                           </TableCell>
                         );
@@ -435,7 +430,7 @@ export function DataTableUI({
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild disabled={selectCount > 1}>
-                              <Button className="h-8">
+                              <Button className="h-8 cursor-pointer">
                                 <Settings />
                               </Button>
                             </DropdownMenuTrigger>

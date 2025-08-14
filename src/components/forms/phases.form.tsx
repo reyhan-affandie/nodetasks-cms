@@ -46,7 +46,9 @@ export function ModuleForm({
 
   const [name, setName] = useState(selectedData?.data?.name ?? "");
   const [name_en, setNameEn] = useState(selectedData?.data?.name_en ?? "");
+  const [name_de, setNameDe] = useState(selectedData?.data?.name_de ?? "");
   const [name_id, setNameId] = useState(selectedData?.data?.name_id ?? "");
+  const [name_nl, setNameNl] = useState(selectedData?.data?.name_nl ?? "");
   const [name_ph, setNamePh] = useState(selectedData?.data?.name_ph ?? "");
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -92,6 +94,8 @@ export function ModuleForm({
     if (selectedData?.data !== null && formTitle === "update") {
       setName(selectedData.data.name ?? "");
       setNameEn(selectedData.data.name_en ?? "");
+      setNameEn(selectedData.data.name_de ?? "");
+      setNameEn(selectedData.data.name_nl ?? "");
       setNameId(selectedData.data.name_id ?? "");
       setNamePh(selectedData.data.name_ph ?? "");
     } else if (formTitle === "create") {
@@ -140,9 +144,11 @@ export function ModuleForm({
 
         {[
           ["name", name, setName, 191],
-          ["name_en", name_en, setNameEn, 191],
-          ["name_id", name_id, setNameId, 191],
-          ["name_ph", name_ph, setNamePh, 191],
+          ["en", name_en, setNameEn, 191],
+          ["de", name_de, setNameDe, 191],
+          ["nl", name_nl, setNameNl, 191],
+          ["id", name_id, setNameId, 191],
+          ["ph", name_ph, setNamePh, 191],
         ].map(([key, value, setter, maxLength]) => (
           <div key={key as string}>
             <Label htmlFor={key as string} className="flex items-center gap-1 mb-1" required>
