@@ -293,7 +293,7 @@ export default function EventsDashboardParam() {
                 <PopoverTrigger asChild>
                   <Button variant={"gray"} className="cursor-pointer rounded items-center col-span-4">
                     <CalendarIcon size={16} />
-                    {format(currentDate, "EEEE, dd MMM yyyy")}
+                    {format(currentDate, "EEE, dd MMM yyyy")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 border bg-white shadow-md rounded" align="start">

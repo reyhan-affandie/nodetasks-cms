@@ -7,7 +7,21 @@ import { checkLangService } from "@/services/services";
 import { buildFeatureAccessMap, hasAnyPermission } from "@/lib/utils";
 
 const locales = ["en", "de", "nl", "id", "ph"];
-const baseProtectedRoutes = ["dashboard", "features", "phases", "priorities", "roles", "tasks", "users"];
+const baseProtectedRoutes = [
+  "dashboard",
+  "clients",
+  "currencies",
+  "events",
+  "features",
+  "phases",
+  "priorities",
+  "roles",
+  "schedules",
+  "stages",
+  "tasks",
+  "transactions",
+  "users",
+];
 
 function isProtectedRoute(path: string) {
   const segments = path.split("/").filter(Boolean);

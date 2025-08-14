@@ -154,6 +154,30 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     </SidebarMenu>
   );
 
+  const renderTransactionsMenu = () =>
+    hasPermission("transactions") ? (
+      <SidebarMenu>
+        <SidebarMenuItem
+          className={`flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer ${
+            pathname === `/${locale}/transactions` ? "bg-blue-100 text-blue-800 font-semibold" : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
+          }`}
+          onClick={() => handleNavigate("transactions")}
+        >
+          <Calendar className="mr-2 h-4 w-4" />
+          {t("transactions")}
+        </SidebarMenuItem>
+        <SidebarMenuItem
+          className={`flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer ${
+            pathname === `/${locale}/schedules` ? "bg-blue-100 text-blue-800 font-semibold" : "hover:bg-blue-100 hover:text-blue-800 hover:font-semibold"
+          }`}
+          onClick={() => handleNavigate("schedules")}
+        >
+          <Calendar className="mr-2 h-4 w-4" />
+          {t("schedules")}
+        </SidebarMenuItem>
+      </SidebarMenu>
+    ) : null;
+
   const renderEventsMenu = () =>
     hasPermission("events") ? (
       <SidebarMenu>
@@ -250,6 +274,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           <div className="pt-4">
             <SidebarMenu>
               {renderDashboardMenu()}
+              {renderTransactionsMenu()}
               {renderEventsMenu()}
               {renderTasksMenu()}
             </SidebarMenu>
