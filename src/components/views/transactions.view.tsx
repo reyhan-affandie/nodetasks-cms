@@ -6,7 +6,7 @@ import { DefaultStateType, FORM_INITIAL_STATE } from "@/constants/global";
 import { useTranslations } from "next-intl";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { safeFormatDateTime } from "@/lib/utils";
+import { formatAmount, safeFormatDateTime } from "@/lib/utils";
 
 export function ModuleView({
   alertViewOpen,
@@ -32,7 +32,8 @@ export function ModuleView({
   setSelectedData: Dispatcher<DefaultStateType>;
 }) {
   const t = useTranslations();
-  const data = selectedData?.data;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = selectedData?.data as any;
 
   const resetState = () => {
     setSelectedDataId(0);
@@ -49,11 +50,25 @@ export function ModuleView({
     );
   };
 
-  const fields = [
-    ["title", data?.title],
-    ["start_date_time", safeFormatDateTime(data?.startDateTime)],
-    ["end_date_time", safeFormatDateTime(data?.endDateTime)],
-    ["name", data?.user?.name],
+  const amountWithCurrency = () => {
+    const symbol = data?.currency?.symbol ?? "";
+    const pretty = formatAmount(data?.amount);
+    return pretty === "-" ? "-" : `${symbol ? symbol + " " : ""}${pretty}`;
+  };
+
+  // Build fields for display
+  const fields: Array<[string, React.ReactNode]> = [
+    ["user", data?.user?.name],
+    ["client", data?.client?.name],
+    ["stage", data?.stage?.name],
+    ["currency", data?.currency ? `${data?.currency?.name} ${data?.currency?.symbol ? `(${data.currency.symbol})` : ""}` : "-"],
+    ["transaction_date", safeFormatDateTime(data?.transactionDate)],
+    ["amount", amountWithCurrency()],
+    ["notes", data?.notes],
+    ["sheet", data?.sheet],
+    ["tab", data?.tab],
+    ["tabname", data?.tabname],
+    ["sheetrow", data?.sheetrow],
     ["createdAt", safeFormatDateTime(data?.createdAt)],
     ["updatedAt", safeFormatDateTime(data?.updatedAt)],
   ];
@@ -66,14 +81,16 @@ export function ModuleView({
             {t("view")} {api}
           </AlertDialogTitle>
         </AlertDialogHeader>
+
         <div className="space-y-4">
           {fields.map(([key, value]) => (
-            <div key={key as string}>
-              <Label>{t(key as string)}</Label>
+            <div key={key}>
+              <Label>{t(key)}</Label>
               <p>{value !== undefined && value !== null && value !== "" ? value : "-"}</p>
             </div>
           ))}
         </div>
+
         <AlertDialogFooter>
           <Button className="cursor-pointer" variant="destructive" onClick={resetState}>
             {t("close")}
